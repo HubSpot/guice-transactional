@@ -5,6 +5,8 @@ import com.google.inject.matcher.Matchers;
 import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
 import org.aopalliance.intercept.MethodInterceptor;
 
+import java.util.Objects;
+
 public class TransactionalModule extends AbstractModule {
 
   @Override
@@ -12,5 +14,15 @@ public class TransactionalModule extends AbstractModule {
     MethodInterceptor transactionalInterceptor = new TransactionalInterceptor();
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), transactionalInterceptor);
     binder().requestInjection(transactionalInterceptor);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return o != null && o.getClass() == getClass();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(getClass());
   }
 }
