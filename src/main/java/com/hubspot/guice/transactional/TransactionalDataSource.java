@@ -3,16 +3,14 @@ package com.hubspot.guice.transactional;
 import com.hubspot.guice.transactional.impl.TransactionalConnection;
 
 import javax.sql.DataSource;
-import java.io.Closeable;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
 
-public class TransactionalDataSource implements DataSource, Closeable {
-  private static final ThreadLocal<TransactionalConnection> ACTIVE_TRANSACTION = new ThreadLocal<TransactionalConnection>();
+public class TransactionalDataSource implements DataSource {
+  private static final ThreadLocal<TransactionalConnection> ACTIVE_TRANSACTION = new ThreadLocal<>();
 
   private final DataSource delegate;
 
@@ -112,12 +110,5 @@ public class TransactionalDataSource implements DataSource, Closeable {
   @SuppressWarnings("unchecked")
   public <T> T unwrap(Class<T> type) throws SQLException {
     return delegate.unwrap(type);
-  }
-
-  @Override
-  public void close() throws IOException {
-    if (delegate instanceof Closeable) {
-      ((Closeable) delegate).close();
-    }
   }
 }
