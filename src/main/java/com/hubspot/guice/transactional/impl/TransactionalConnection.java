@@ -18,7 +18,7 @@ public class TransactionalConnection extends FilterConnection {
   }
 
   public void reallyClose() throws SQLException {
-    super.close();
     getInner().setAutoCommit(true);
+    super.close();
   }
 }
