@@ -5,6 +5,7 @@ import com.google.inject.matcher.Matchers;
 import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
 import org.aopalliance.intercept.MethodInterceptor;
 
+import javax.transaction.Transactional;
 import java.util.Objects;
 
 public class TransactionalModule extends AbstractModule {

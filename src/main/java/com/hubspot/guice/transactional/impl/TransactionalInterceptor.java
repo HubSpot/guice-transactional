@@ -1,12 +1,16 @@
 package com.hubspot.guice.transactional.impl;
 
 import com.hubspot.guice.transactional.DataSourceLocator;
-import com.hubspot.guice.transactional.Transactional;
 import com.hubspot.guice.transactional.TransactionalDataSource;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
 import javax.inject.Inject;
+import javax.transaction.InvalidTransactionException;
+import javax.transaction.TransactionRequiredException;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
+import javax.transaction.TransactionalException;
 
 public class TransactionalInterceptor implements MethodInterceptor {
 
@@ -17,41 +21,71 @@ public class TransactionalInterceptor implements MethodInterceptor {
   public Object invoke(MethodInvocation invocation) throws Throwable {
     TransactionalDataSource dataSource = dataSourceLocator.locate(invocation);
 
-    if (enabled(invocation)) {
-      return runWithTransaction(invocation, dataSource);
-    } else {
-      return runWithoutTransaction(invocation, dataSource);
-    }
-  }
+    Transactional annotation = invocation.getMethod().getAnnotation(Transactional.class);
+    TxType transactionType = annotation.value();
 
-  private Object runWithTransaction(MethodInvocation invocation, TransactionalDataSource dataSource) throws Throwable {
+    TransactionalConnection oldTransaction = null;
+    boolean completeTransaction = false;
+
     if (dataSource.inTransaction()) {
-      return invocation.proceed();
+      switch (transactionType) {
+        case REQUIRES_NEW:
+          oldTransaction = dataSource.pauseTransaction();
+          dataSource.startTransaction();
+          completeTransaction = true;
+          break;
+        case NOT_SUPPORTED:
+          oldTransaction = dataSource.pauseTransaction();
+          break;
+        case NEVER:
+          throw new TransactionalException("Transaction is not allowed", new InvalidTransactionException());
+      }
     } else {
-      dataSource.startTransaction();
-      try {
-        Object returnValue = invocation.proceed();
+      switch (transactionType) {
+        case REQUIRED:
+        case REQUIRES_NEW:
+          dataSource.startTransaction();
+          completeTransaction = true;
+          break;
+        case MANDATORY:
+          throw new TransactionalException("Transaction is required", new TransactionRequiredException());
+      }
+    }
+
+    try {
+      Object returnValue = invocation.proceed();
+      if (completeTransaction) {
         dataSource.commitTransaction();
-        return returnValue;
-      } catch (Throwable t) {
-        dataSource.rollbackTransaction();
-        throw t;
+      }
+      return returnValue;
+    } catch (Throwable t) {
+      if (completeTransaction) {
+        if (shouldRollback(annotation, t)) {
+          dataSource.rollbackTransaction();
+        } else {
+          dataSource.commitTransaction();
+        }
+      }
+      throw t;
+    } finally {
+      try {
+        if (completeTransaction) {
+          dataSource.endTransaction();
+        }
       } finally {
-        dataSource.endTransaction();
+        dataSource.resumeTransaction(oldTransaction);
       }
     }
   }
 
-  private Object runWithoutTransaction(MethodInvocation invocation, TransactionalDataSource dataSource) throws Throwable {
-    TransactionalConnection transaction = dataSource.pauseTransaction();
-    try {
-      return invocation.proceed();
-    } finally {
-      dataSource.resumeTransaction(transaction);
+  @SuppressWarnings("unchecked")
+  private boolean shouldRollback(Transactional annotation, Throwable t) {
+    for (Class dontRollback : annotation.dontRollbackOn()) {
+      if (dontRollback.isAssignableFrom(t.getClass())) {
+        return false;
+      }
     }
-  }
 
-  private boolean enabled(MethodInvocation invocation) {
-    return invocation.getMethod().getAnnotation(Transactional.class).value();
+    return true;
   }
 }
