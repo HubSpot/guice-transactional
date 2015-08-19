@@ -25,7 +25,7 @@ There are a few steps to get up and running with guice-transactional:
 
 1. Install `TransactionalModule` when building your Guice injector, this sets up the necessary method interceptor
 
-2. Add a Guice binding for `TransactionalDataSource`, wrapping the normal `javax.sql.DataSource`, this might look something like:
+2. Add a Guice binding for `TransactionalDataSource`, wrapping the normal `javax.sql.DataSource`. This might look something like:
 
   ```java
   @Provides
