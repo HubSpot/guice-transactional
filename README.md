@@ -47,8 +47,8 @@ objects that were created by Guice and they must not be `private`.
 When you install `TransactionalModule`, an interceptor is added to methods annotated with `@javax.transaction.Transactional`. 
 Before the transactional method is invoked, the interceptor checks out a connection from the data source (which it locates via
 the `TransactionalDataSource` Guice binding) and disables autocommit. This connection is stored in a `ThreadLocal` and will be
-returned every time someone requests a connection from the data source. After the transactional method completes, the 
-transaction will either be committed or rolled back depending on the result of the method call.
+returned every time someone requests a connection during the transactional method execution. After the transactional method
+completes, the transaction will either be committed or rolled back depending on the result of the method call.
 
 ## Advanced Configuration
 
