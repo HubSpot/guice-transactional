@@ -5,7 +5,12 @@
 Miss the convenience of `@Transactional` but have no interest in using JPA? Then guice-transactional is for you.
 
 guice-transactional just needs access to the underlying `javax.sql.DataSource` so it will work with any persistence framework,
-including jDBI, Hibernate, MyBatis, QueryRunner, or even raw JDBC. 
+including jDBI, Hibernate, MyBatis, QueryRunner, or even raw JDBC.
+
+This library uses the standard `@javax.transaction.Transactional` annotation and works as you expect, transactions will be
+started before the method is called and committed or rolled back after the method completes. It also implements all of the
+[transaction types](http://docs.oracle.com/javaee/7/api/javax/transaction/Transactional.TxType.html) for more complicated
+use-cases. 
 
 ## Maven Dependency
 
