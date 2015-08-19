@@ -4,7 +4,7 @@
 
 Miss the convenience of `@Transactional` but have no interest in using JPA? Then guice-transactional is for you.
 
-guice-transactional just needs access to the underlying `javax.sql.DataSource` so it will work with any persistance framework,
+guice-transactional just needs access to the underlying `javax.sql.DataSource` so it will work with any persistence framework,
 including jDBI, Hibernate, MyBatis, QueryRunner, or even raw JDBC. 
 
 ## Maven Dependency
