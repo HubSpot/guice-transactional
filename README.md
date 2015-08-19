@@ -9,7 +9,7 @@ including jDBI, Hibernate, MyBatis, QueryRunner, or even raw JDBC.
 
 This library uses the standard `@javax.transaction.Transactional` annotation and works as you expect, transactions will be
 started before the method is called and committed or rolled back after the method completes. It also implements all of the
-[transaction types](http://docs.oracle.com/javaee/7/api/javax/transaction/Transactional.TxType.html) for more complicated
+[transaction types](http://docs.oracle.com/javaee/7/api/javax/transaction/Transactional.TxType.html#enum.constant.summary) for more complicated
 use-cases. 
 
 ## Maven Dependency
