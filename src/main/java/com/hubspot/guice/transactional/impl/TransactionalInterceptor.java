@@ -24,7 +24,7 @@ public class TransactionalInterceptor implements MethodInterceptor {
     Transactional annotation = invocation.getMethod().getAnnotation(Transactional.class);
     TxType transactionType = annotation.value();
 
-    TransactionalConnection oldTransaction = null;
+    TransactionalConnection oldTransaction = dataSource.getTransaction();
     boolean completeTransaction = false;
 
     if (dataSource.inTransaction()) {

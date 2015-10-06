@@ -19,11 +19,15 @@ public class TransactionalDataSource implements DataSource {
   }
 
   public boolean inTransaction() {
-    return ACTIVE_TRANSACTION.get() != null;
+    return getTransaction() != null;
+  }
+
+  public TransactionalConnection getTransaction() {
+    return ACTIVE_TRANSACTION.get();
   }
 
   public TransactionalConnection pauseTransaction() {
-    TransactionalConnection connection = ACTIVE_TRANSACTION.get();
+    TransactionalConnection connection = getTransaction();
     ACTIVE_TRANSACTION.set(null);
     return connection;
   }
@@ -43,14 +47,14 @@ public class TransactionalDataSource implements DataSource {
     if (!inTransaction()) {
       throw new IllegalStateException("No active transaction");
     }
-    ACTIVE_TRANSACTION.get().commit();
+    getTransaction().commit();
   }
 
   public void rollbackTransaction() throws SQLException {
     if (!inTransaction()) {
       throw new IllegalStateException("No active transaction");
     }
-    ACTIVE_TRANSACTION.get().rollback();
+    getTransaction().rollback();
   }
 
   public void endTransaction() throws SQLException {
@@ -58,7 +62,7 @@ public class TransactionalDataSource implements DataSource {
       throw new IllegalStateException("No active transaction");
     }
     try {
-      ACTIVE_TRANSACTION.get().reallyClose();
+      getTransaction().reallyClose();
     } finally {
       ACTIVE_TRANSACTION.set(null);
     }
@@ -66,14 +70,14 @@ public class TransactionalDataSource implements DataSource {
 
   @Override
   public Connection getConnection() throws SQLException {
-    TransactionalConnection connection = ACTIVE_TRANSACTION.get();
+    TransactionalConnection connection = getTransaction();
 
     return connection == null ? delegate.getConnection() : connection;
   }
 
   @Override
   public Connection getConnection(String username, String password) throws SQLException {
-    TransactionalConnection connection = ACTIVE_TRANSACTION.get();
+    TransactionalConnection connection = getTransaction();
 
     return connection == null ? delegate.getConnection(username, password) : connection;
   }
