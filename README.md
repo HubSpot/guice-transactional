@@ -21,7 +21,7 @@ To use on Maven-based projects, add the following dependency:
 <dependency>
   <groupId>com.hubspot.guice</groupId>
   <artifactId>guice-transactional</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1</version>
 </dependency>
 ```
 
