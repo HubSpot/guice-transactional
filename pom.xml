@@ -51,16 +51,26 @@
       <artifactId>guice</artifactId>
     </dependency>
     <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-    </dependency>
-    <dependency>
       <groupId>javax.transaction</groupId>
       <artifactId>javax.transaction-api</artifactId>
     </dependency>
     <dependency>
       <groupId>com.mchange</groupId>
       <artifactId>mchange-commons-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
     </dependency>
   </dependencies>
 </project>

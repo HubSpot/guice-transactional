@@ -1,6 +1,7 @@
 package com.hubspot.guice.transactional;
 
 import com.hubspot.guice.transactional.impl.TransactionalConnection;
+import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -10,76 +11,40 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
 
 public class TransactionalDataSource implements DataSource {
-  private static final ThreadLocal<TransactionalConnection> ACTIVE_TRANSACTION = new ThreadLocal<>();
-
   private final DataSource delegate;
 
   public TransactionalDataSource(DataSource delegate) {
     this.delegate = delegate;
   }
 
-  public boolean inTransaction() {
-    return getTransaction() != null;
-  }
-
-  public TransactionalConnection getTransaction() {
-    return ACTIVE_TRANSACTION.get();
-  }
-
-  public TransactionalConnection pauseTransaction() {
-    TransactionalConnection connection = getTransaction();
-    ACTIVE_TRANSACTION.set(null);
-    return connection;
-  }
-
-  public void resumeTransaction(TransactionalConnection connection) {
-    ACTIVE_TRANSACTION.set(connection);
-  }
-
-  public void startTransaction() throws SQLException {
-    if (inTransaction()) {
-      throw new IllegalStateException("Already in a transaction");
-    }
-    ACTIVE_TRANSACTION.set(new TransactionalConnection(getConnection()));
-  }
-
-  public void commitTransaction() throws SQLException {
-    if (!inTransaction()) {
-      throw new IllegalStateException("No active transaction");
-    }
-    getTransaction().commit();
-  }
-
-  public void rollbackTransaction() throws SQLException {
-    if (!inTransaction()) {
-      throw new IllegalStateException("No active transaction");
-    }
-    getTransaction().rollback();
-  }
-
-  public void endTransaction() throws SQLException {
-    if (!inTransaction()) {
-      throw new IllegalStateException("No active transaction");
-    }
-    try {
-      getTransaction().reallyClose();
-    } finally {
-      ACTIVE_TRANSACTION.set(null);
-    }
-  }
-
   @Override
   public Connection getConnection() throws SQLException {
-    TransactionalConnection connection = getTransaction();
+    if (TransactionalInterceptor.inTransaction()) {
+      TransactionalConnection connection = TransactionalInterceptor.getTransaction();
+      if (connection == null) {
+        connection = new TransactionalConnection(delegate.getConnection());
+        TransactionalInterceptor.setTransaction(connection);
+      }
 
-    return connection == null ? delegate.getConnection() : connection;
+      return connection;
+    } else {
+      return delegate.getConnection();
+    }
   }
 
   @Override
   public Connection getConnection(String username, String password) throws SQLException {
-    TransactionalConnection connection = getTransaction();
+    if (TransactionalInterceptor.inTransaction()) {
+      TransactionalConnection connection = TransactionalInterceptor.getTransaction();
+      if (connection == null) {
+        connection = new TransactionalConnection(delegate.getConnection(username, password));
+        TransactionalInterceptor.setTransaction(connection);
+      }
 
-    return connection == null ? delegate.getConnection(username, password) : connection;
+      return connection;
+    } else {
+      return delegate.getConnection();
+    }
   }
 
   @Override

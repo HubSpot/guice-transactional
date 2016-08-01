@@ -1,11 +1,8 @@
 package com.hubspot.guice.transactional.impl;
 
-import com.hubspot.guice.transactional.DataSourceLocator;
-import com.hubspot.guice.transactional.TransactionalDataSource;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
-import javax.inject.Inject;
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.TransactionRequiredException;
 import javax.transaction.Transactional;
@@ -13,29 +10,46 @@ import javax.transaction.Transactional.TxType;
 import javax.transaction.TransactionalException;
 
 public class TransactionalInterceptor implements MethodInterceptor {
+  private static final ThreadLocal<TransactionalConnection> TRANSACTION_HOLDER = new ThreadLocal<>();
+  private static final ThreadLocal<Boolean> IN_TRANSACTION = new ThreadLocal<Boolean>() {
 
-  @Inject
-  DataSourceLocator dataSourceLocator;
+    @Override
+    protected Boolean initialValue() {
+      return false;
+    }
+  };
+
+  public static boolean inTransaction() {
+    return IN_TRANSACTION.get();
+  }
+
+  public static TransactionalConnection getTransaction() {
+    return TRANSACTION_HOLDER.get();
+  }
+
+  public static void setTransaction(TransactionalConnection transaction) {
+    TRANSACTION_HOLDER.set(transaction);
+  }
 
   @Override
   public Object invoke(MethodInvocation invocation) throws Throwable {
-    TransactionalDataSource dataSource = dataSourceLocator.locate(invocation);
-
     Transactional annotation = invocation.getMethod().getAnnotation(Transactional.class);
     TxType transactionType = annotation.value();
 
-    TransactionalConnection oldTransaction = dataSource.getTransaction();
+    boolean oldInTransaction = IN_TRANSACTION.get();
+    TransactionalConnection oldTransaction = TRANSACTION_HOLDER.get();
     boolean completeTransaction = false;
 
-    if (dataSource.inTransaction()) {
+    if (IN_TRANSACTION.get()) {
       switch (transactionType) {
         case REQUIRES_NEW:
-          oldTransaction = dataSource.pauseTransaction();
-          dataSource.startTransaction();
+          TRANSACTION_HOLDER.set(null);
           completeTransaction = true;
           break;
         case NOT_SUPPORTED:
-          oldTransaction = dataSource.pauseTransaction();
+          IN_TRANSACTION.set(false);
+          TRANSACTION_HOLDER.set(null);
+          completeTransaction = true;
           break;
         case NEVER:
           throw new TransactionalException("Transaction is not allowed", new InvalidTransactionException());
@@ -44,7 +58,7 @@ public class TransactionalInterceptor implements MethodInterceptor {
       switch (transactionType) {
         case REQUIRED:
         case REQUIRES_NEW:
-          dataSource.startTransaction();
+          IN_TRANSACTION.set(true);
           completeTransaction = true;
           break;
         case MANDATORY:
@@ -55,25 +69,35 @@ public class TransactionalInterceptor implements MethodInterceptor {
     try {
       Object returnValue = invocation.proceed();
       if (completeTransaction) {
-        dataSource.commitTransaction();
+        TransactionalConnection transaction = TRANSACTION_HOLDER.get();
+        if (transaction != null) {
+          transaction.commit();
+        }
       }
       return returnValue;
     } catch (Throwable t) {
       if (completeTransaction) {
-        if (shouldRollback(annotation, t)) {
-          dataSource.rollbackTransaction();
-        } else {
-          dataSource.commitTransaction();
+        TransactionalConnection transaction = TRANSACTION_HOLDER.get();
+        if (transaction != null) {
+          if (shouldRollback(annotation, t)) {
+            transaction.rollback();
+          } else {
+            transaction.commit();
+          }
         }
       }
       throw t;
     } finally {
-      try {
-        if (completeTransaction) {
-          dataSource.endTransaction();
+      if (completeTransaction) {
+        try {
+          TransactionalConnection transaction = TRANSACTION_HOLDER.get();
+          if (transaction != null) {
+            transaction.reallyClose();
+          }
+        } finally {
+          IN_TRANSACTION.set(oldInTransaction);
+          TRANSACTION_HOLDER.set(oldTransaction);
         }
-      } finally {
-        dataSource.resumeTransaction(oldTransaction);
       }
     }
   }
