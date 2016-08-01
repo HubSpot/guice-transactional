@@ -69,7 +69,13 @@ public class TransactionalDataSource implements DataSource {
 
   @Override
   public boolean isWrapperFor(Class<?> type) throws SQLException {
-    return delegate.isWrapperFor(type);
+    if (type.isInstance(this)) {
+      return true;
+    } else if (type.isInstance(delegate)) {
+      return true;
+    } else {
+      return delegate.isWrapperFor(type);
+    }
   }
 
   public Logger getParentLogger() throws SQLFeatureNotSupportedException {
@@ -78,6 +84,12 @@ public class TransactionalDataSource implements DataSource {
 
   @SuppressWarnings("unchecked")
   public <T> T unwrap(Class<T> type) throws SQLException {
-    return delegate.unwrap(type);
+    if (type.isInstance(this)) {
+      return (T) this;
+    } else if (type.isInstance(delegate)) {
+      return (T) delegate;
+    } else {
+      return delegate.unwrap(type);
+    }
   }
 }
