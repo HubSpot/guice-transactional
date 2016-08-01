@@ -66,17 +66,17 @@ public class TransactionalInterceptor implements MethodInterceptor {
       }
     }
 
-    try {
-      Object returnValue = invocation.proceed();
-      if (completeTransaction) {
+    if (!completeTransaction) {
+      return invocation.proceed();
+    } else {
+      try {
+        Object returnValue = invocation.proceed();
         TransactionalConnection transaction = TRANSACTION_HOLDER.get();
         if (transaction != null) {
           transaction.commit();
         }
-      }
-      return returnValue;
-    } catch (Throwable t) {
-      if (completeTransaction) {
+        return returnValue;
+      } catch (Throwable t) {
         TransactionalConnection transaction = TRANSACTION_HOLDER.get();
         if (transaction != null) {
           if (shouldRollback(annotation, t)) {
@@ -85,10 +85,8 @@ public class TransactionalInterceptor implements MethodInterceptor {
             transaction.commit();
           }
         }
-      }
-      throw t;
-    } finally {
-      if (completeTransaction) {
+        throw t;
+      } finally {
         try {
           TransactionalConnection transaction = TRANSACTION_HOLDER.get();
           if (transaction != null) {
