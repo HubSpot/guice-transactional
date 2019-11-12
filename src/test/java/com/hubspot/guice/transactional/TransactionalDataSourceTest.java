@@ -24,17 +24,21 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.mchange.v2.sql.filter.FilterConnection;
 
 public class TransactionalDataSourceTest {
   private static TestService testService;
+  private static final String OTHER = "other";
 
   @BeforeClass
   public static void setup() {
     Injector injector = Guice.createInjector(new TransactionalModule(), new Module() {
       @Override
       public void configure(Binder binder) {
-        binder.bind(DataSource.class).toInstance(new TransactionalDataSource(new TestDataSource()));
+        binder.bind(DataSource.class).toInstance(new TransactionalDataSource(new TestDataSource("test")));
+        binder.bind(DataSource.class).annotatedWith(Names.named(OTHER)).toInstance(new TransactionalDataSource(new TestDataSource(OTHER)));
         binder.bind(TestService.class);
       }
     });
@@ -45,6 +49,11 @@ public class TransactionalDataSourceTest {
   @After
   public void verify() throws SQLException {
     verifyTransactionalStateIsCleared();
+  }
+
+  @Test(expected = SQLException.class)
+  public void itThrowsOnCrossDBTransactions() throws SQLException {
+    testService.multiDbTransaction();
   }
 
   @Test
@@ -90,10 +99,13 @@ public class TransactionalDataSourceTest {
 
   private static class TestService {
     private final DataSource dataSource;
+    private final DataSource otherDataSource;
 
     @Inject
-    public TestService(DataSource dataSource) {
+    public TestService(DataSource dataSource,
+                       @Named(OTHER) DataSource otherDataSource) {
       this.dataSource = dataSource;
+      this.otherDataSource = otherDataSource;
     }
 
     public List<Connection> nonTransactionalMethod() throws SQLException {
@@ -113,6 +125,12 @@ public class TransactionalDataSourceTest {
       connections.addAll(transactionalMethod());
 
       return connections;
+    }
+
+    @Transactional
+    public void multiDbTransaction() throws SQLException {
+      dataSource.getConnection();
+      otherDataSource.getConnection();
     }
 
     @Transactional
@@ -142,15 +160,20 @@ public class TransactionalDataSourceTest {
   }
 
   private static class TestDataSource implements DataSource {
+    private final String name;
+
+    public TestDataSource(String name) {
+      this.name = name;
+    }
 
     @Override
     public Connection getConnection() throws SQLException {
-      return new TestConnection();
+      return new TestConnection(name);
     }
 
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
-      return new TestConnection();
+      return new TestConnection(name);
     }
 
     @Override
@@ -186,6 +209,12 @@ public class TransactionalDataSourceTest {
   }
 
   private static class TestConnection extends FilterConnection {
+    private final String name;
+
+    public TestConnection(String name) {
+      this.name = name;
+    }
+
 
     @Override
     public void setAutoCommit(boolean a) {}
@@ -198,5 +227,10 @@ public class TransactionalDataSourceTest {
 
     @Override
     public void close() {}
+
+    @Override
+    public String getCatalog() throws SQLException {
+      return name;
+    }
   }
 }
