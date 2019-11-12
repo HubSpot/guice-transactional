@@ -1,16 +1,19 @@
 package com.hubspot.guice.transactional;
 
-import com.hubspot.guice.transactional.impl.TransactionalConnection;
-import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
-
-import javax.sql.DataSource;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
+import javax.sql.DataSource;
+
+import com.hubspot.guice.transactional.impl.TransactionalConnection;
+import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
+
 public class TransactionalDataSource implements DataSource {
+  private final AtomicReference<String ring> dbName = new AtomicReference<>();
   private final DataSource delegate;
 
   public TransactionalDataSource(DataSource delegate) {
@@ -22,13 +25,18 @@ public class TransactionalDataSource implements DataSource {
     if (TransactionalInterceptor.inTransaction()) {
       TransactionalConnection connection = TransactionalInterceptor.getTransaction();
       if (connection == null) {
-        connection = new TransactionalConnection(delegate.getConnection());
+        Connection delegateConnection = delegate.getConnection();
+        ensureDbNamePopulated(delegateConnection);
+        connection = new TransactionalConnection(delegateConnection, getDbName());
         TransactionalInterceptor.setTransaction(connection);
       }
+      throwIfConnectionInvalid(connection);
 
       return connection;
     } else {
-      return delegate.getConnection();
+      Connection connection = delegate.getConnection();
+      ensureDbNamePopulated(connection);
+      return connection;
     }
   }
 
@@ -37,13 +45,17 @@ public class TransactionalDataSource implements DataSource {
     if (TransactionalInterceptor.inTransaction()) {
       TransactionalConnection connection = TransactionalInterceptor.getTransaction();
       if (connection == null) {
-        connection = new TransactionalConnection(delegate.getConnection(username, password));
+        connection = new TransactionalConnection(delegate.getConnection(username, password), getDbName());
+        ensureDbNamePopulated(connection);
         TransactionalInterceptor.setTransaction(connection);
       }
+      throwIfConnectionInvalid(connection);
 
       return connection;
     } else {
-      return delegate.getConnection();
+      Connection connection = delegate.getConnection(username, password);
+      ensureDbNamePopulated(connection);
+      return connection;
     }
   }
 
@@ -91,5 +103,22 @@ public class TransactionalDataSource implements DataSource {
     } else {
       return delegate.unwrap(type);
     }
+  }
+
+  private void throwIfConnectionInvalid(TransactionalConnection connection) throws SQLException {
+    String dbName = getDbName();
+    if (connection.getDatabaseName() != dbName) {
+      dbName = dbName != null ? dbName : "unknown";
+      throw new SQLException(String.format("Attempt to acquire connection to database %s, during transaction in database %s",
+          dbName, connection.getDatabaseName()));
+    }
+  }
+
+  private String getDbName() {
+    return dbName.get();
+  }
+
+  private void ensureDbNamePopulated(Connection connection) throws SQLException {
+    dbName.set(connection.getCatalog());
   }
 }
