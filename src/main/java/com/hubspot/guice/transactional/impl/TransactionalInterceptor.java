@@ -80,25 +80,29 @@ public class TransactionalInterceptor implements MethodInterceptor {
         Object returnValue = invocation.proceed();
         TransactionalConnection transaction = TRANSACTION_HOLDER.get();
         if (transaction != null) {
-          LOG.debug("Committing transaction.");
+          LOG.debug("Committing transaction normally.");
           transaction.commit();
         }
         return returnValue;
       } catch (Throwable t) {
-        LOG.debug("Exception while completing transaction.", t);
+        LOG.debug("Exception while completing transaction, transactional holder {}", TRANSACTION_HOLDER.get(), t);
         TransactionalConnection transaction = TRANSACTION_HOLDER.get();
         if (transaction != null) {
           if (shouldRollback(annotation, t)) {
+            LOG.debug("Rolling back transaction.");
             transaction.rollback();
           } else {
+            LOG.debug("Committing transaction after exception.");
             transaction.commit();
           }
         }
         throw t;
       } finally {
         try {
+          LOG.debug("In the finally block for the transaction now {}", TRANSACTION_HOLDER.get());
           TransactionalConnection transaction = TRANSACTION_HOLDER.get();
           if (transaction != null) {
+            LOG.debug("Calling really close for the transaction. {}", TRANSACTION_HOLDER.get());
             transaction.reallyClose();
           }
         } finally {

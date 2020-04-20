@@ -9,11 +9,14 @@ import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
+import org.slf4j.LoggerFactory;
+
 import com.hubspot.guice.transactional.impl.TransactionalConnection;
 import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
 
 public class TransactionalDataSource implements DataSource {
   private final AtomicReference<String> dbName = new AtomicReference<>();
+  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(TransactionalDataSource.class);
   private final DataSource delegate;
 
   public TransactionalDataSource(DataSource delegate) {
@@ -22,8 +25,10 @@ public class TransactionalDataSource implements DataSource {
 
   @Override
   public Connection getConnection() throws SQLException {
+    LOG.debug("Creating a new connection.", new RuntimeException("For the stack trace."));
     if (TransactionalInterceptor.inTransaction()) {
       TransactionalConnection connection = TransactionalInterceptor.getTransaction();
+      LOG.debug("In transaction, found existing transcational connection {}.", connection);
       if (connection == null) {
         Connection delegateConnection = delegate.getConnection();
         ensureDbNamePopulated(delegateConnection);
@@ -34,6 +39,7 @@ public class TransactionalDataSource implements DataSource {
 
       return connection;
     } else {
+      LOG.debug("Getting regular connection.");
       Connection connection = delegate.getConnection();
       ensureDbNamePopulated(connection);
       return connection;
