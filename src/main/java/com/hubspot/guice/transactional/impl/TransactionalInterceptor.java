@@ -1,16 +1,19 @@
 package com.hubspot.guice.transactional.impl;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.TransactionRequiredException;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 import javax.transaction.TransactionalException;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class TransactionalInterceptor implements MethodInterceptor {
   private static final ThreadLocal<TransactionalConnection> TRANSACTION_HOLDER = new ThreadLocal<>();
+  private static final Logger LOG = LoggerFactory.getLogger(TransactionalInterceptor.class);
   private static final ThreadLocal<Boolean> IN_TRANSACTION = new ThreadLocal<Boolean>() {
 
     @Override
@@ -39,6 +42,8 @@ public class TransactionalInterceptor implements MethodInterceptor {
     boolean oldInTransaction = IN_TRANSACTION.get();
     TransactionalConnection oldTransaction = TRANSACTION_HOLDER.get();
     boolean completeTransaction = false;
+    LOG.debug("Started invoke chain with transactionType {} old in transaction {} and old transaction {}", transactionType, oldInTransaction, oldInTransaction,
+        new RuntimeException("For the stacktrace."));
 
     if (IN_TRANSACTION.get()) {
       switch (transactionType) {
@@ -67,16 +72,20 @@ public class TransactionalInterceptor implements MethodInterceptor {
     }
 
     if (!completeTransaction) {
+      LOG.debug("Transaction not completed, continuing.");
       return invocation.proceed();
     } else {
       try {
+        LOG.debug("Completing transaction, with current transactional holder {}.", TRANSACTION_HOLDER.get());
         Object returnValue = invocation.proceed();
         TransactionalConnection transaction = TRANSACTION_HOLDER.get();
         if (transaction != null) {
+          LOG.debug("Committing transaction.");
           transaction.commit();
         }
         return returnValue;
       } catch (Throwable t) {
+        LOG.debug("Exception while completing transaction.", t);
         TransactionalConnection transaction = TRANSACTION_HOLDER.get();
         if (transaction != null) {
           if (shouldRollback(annotation, t)) {
