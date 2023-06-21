@@ -1,13 +1,16 @@
 package com.hubspot.guice.transactional.impl;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.TransactionRequiredException;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 import javax.transaction.TransactionalException;
+
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+
+import com.hubspot.guice.transactional.IsolationLevel;
+import com.hubspot.guice.transactional.TransactionalIsolationLevel;
 
 public class TransactionalInterceptor implements MethodInterceptor {
   private static final ThreadLocal<TransactionalConnection> TRANSACTION_HOLDER = new ThreadLocal<>();
@@ -39,6 +42,13 @@ public class TransactionalInterceptor implements MethodInterceptor {
     boolean oldInTransaction = IN_TRANSACTION.get();
     TransactionalConnection oldTransaction = TRANSACTION_HOLDER.get();
     boolean completeTransaction = false;
+
+    if (oldTransaction != null) {
+      TransactionalIsolationLevel transactionalIsolationLevel = invocation.getMethod().getAnnotation(TransactionalIsolationLevel.class);
+      if (transactionalIsolationLevel != null && transactionalIsolationLevel.value() != IsolationLevel.DEFAULT) {
+        oldTransaction.setTransactionIsolation(transactionalIsolationLevel.value().getValue());
+      }
+    }
 
     if (IN_TRANSACTION.get()) {
       switch (transactionType) {
