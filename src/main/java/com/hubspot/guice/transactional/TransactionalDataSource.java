@@ -1,18 +1,17 @@
 package com.hubspot.guice.transactional;
 
+import com.hubspot.guice.transactional.impl.TransactionalConnection;
+import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
-
 import javax.sql.DataSource;
 
-import com.hubspot.guice.transactional.impl.TransactionalConnection;
-import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
-
 public class TransactionalDataSource implements DataSource {
+
   private final AtomicReference<String> dbName = new AtomicReference<>();
   private final DataSource delegate;
 
@@ -106,12 +105,18 @@ public class TransactionalDataSource implements DataSource {
     }
   }
 
-  private void throwIfConnectionInvalid(TransactionalConnection connection) throws SQLException {
+  private void throwIfConnectionInvalid(TransactionalConnection connection)
+    throws SQLException {
     String dbName = getDbName();
     if (!connection.getDatabaseName().equals(dbName)) {
       dbName = dbName != null ? dbName : "unknown";
-      throw new SQLException(String.format("Attempt to acquire connection to database %s, during transaction in database %s",
-          dbName, connection.getDatabaseName()));
+      throw new SQLException(
+        String.format(
+          "Attempt to acquire connection to database %s, during transaction in database %s",
+          dbName,
+          connection.getDatabaseName()
+        )
+      );
     }
   }
 

@@ -1,14 +1,15 @@
 package com.hubspot.guice.transactional.impl;
 
+import com.mchange.v2.sql.filter.FilterConnection;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import com.mchange.v2.sql.filter.FilterConnection;
-
 public class TransactionalConnection extends FilterConnection {
+
   private final String databaseName;
 
-  public TransactionalConnection(Connection delegate, String databaseName) throws SQLException {
+  public TransactionalConnection(Connection delegate, String databaseName)
+    throws SQLException {
     super(delegate);
     this.databaseName = databaseName;
     delegate.setAutoCommit(false);

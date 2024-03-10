@@ -2,6 +2,14 @@ package com.hubspot.guice.transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.Binder;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
+import com.mchange.v2.sql.filter.FilterConnection;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -11,37 +19,35 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
-
 import javax.sql.DataSource;
 import javax.transaction.Transactional;
-
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.inject.Binder;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-import com.mchange.v2.sql.filter.FilterConnection;
-
 public class TransactionalDataSourceTest {
+
   private static TestService testService;
   private static final String OTHER = "other";
 
   @BeforeClass
   public static void setup() {
-    Injector injector = Guice.createInjector(new TransactionalModule(), new Module() {
-      @Override
-      public void configure(Binder binder) {
-        binder.bind(DataSource.class).toInstance(new TransactionalDataSource(new TestDataSource("test")));
-        binder.bind(DataSource.class).annotatedWith(Names.named(OTHER)).toInstance(new TransactionalDataSource(new TestDataSource(OTHER)));
-        binder.bind(TestService.class);
+    Injector injector = Guice.createInjector(
+      new TransactionalModule(),
+      new Module() {
+        @Override
+        public void configure(Binder binder) {
+          binder
+            .bind(DataSource.class)
+            .toInstance(new TransactionalDataSource(new TestDataSource("test")));
+          binder
+            .bind(DataSource.class)
+            .annotatedWith(Names.named(OTHER))
+            .toInstance(new TransactionalDataSource(new TestDataSource(OTHER)));
+          binder.bind(TestService.class);
+        }
       }
-    });
+    );
 
     testService = injector.getInstance(TestService.class);
   }
@@ -68,20 +74,25 @@ public class TransactionalDataSourceTest {
   }
 
   @Test
-  public void itHandlesNestedTransactionWithConnectionCreatedBefore() throws SQLException {
-    List<Connection> connections = testService.nestedTransactionalMethodCreateConnectionBefore();
+  public void itHandlesNestedTransactionWithConnectionCreatedBefore()
+    throws SQLException {
+    List<Connection> connections =
+      testService.nestedTransactionalMethodCreateConnectionBefore();
     verifySame(connections);
   }
 
   @Test
-  public void itHandlesNestedTransactionWithConnectionCreatedBeforeAndAfter() throws SQLException {
-    List<Connection> connections = testService.nestedTransactionalMethodCreateConnectionBeforeAndAfter();
+  public void itHandlesNestedTransactionWithConnectionCreatedBeforeAndAfter()
+    throws SQLException {
+    List<Connection> connections =
+      testService.nestedTransactionalMethodCreateConnectionBeforeAndAfter();
     verifySame(connections);
   }
 
   @Test
   public void itHandlesNestedTransactionWithConnectionCreatedAfter() throws SQLException {
-    List<Connection> connections = testService.nestedTransactionalMethodCreateConnectionAfter();
+    List<Connection> connections =
+      testService.nestedTransactionalMethodCreateConnectionAfter();
     verifySame(connections);
   }
 
@@ -98,12 +109,12 @@ public class TransactionalDataSourceTest {
   }
 
   private static class TestService {
+
     private final DataSource dataSource;
     private final DataSource otherDataSource;
 
     @Inject
-    public TestService(DataSource dataSource,
-                       @Named(OTHER) DataSource otherDataSource) {
+    public TestService(DataSource dataSource, @Named(OTHER) DataSource otherDataSource) {
       this.dataSource = dataSource;
       this.otherDataSource = otherDataSource;
     }
@@ -118,7 +129,8 @@ public class TransactionalDataSourceTest {
     }
 
     @Transactional
-    public List<Connection> nestedTransactionalMethodCreateConnectionBefore() throws SQLException {
+    public List<Connection> nestedTransactionalMethodCreateConnectionBefore()
+      throws SQLException {
       List<Connection> connections = new ArrayList<>();
       connections.add(dataSource.getConnection());
       connections.add(dataSource.getConnection());
@@ -134,7 +146,8 @@ public class TransactionalDataSourceTest {
     }
 
     @Transactional
-    public List<Connection> nestedTransactionalMethodCreateConnectionBeforeAndAfter() throws SQLException {
+    public List<Connection> nestedTransactionalMethodCreateConnectionBeforeAndAfter()
+      throws SQLException {
       List<Connection> connections = new ArrayList<>();
       connections.add(dataSource.getConnection());
       connections.addAll(transactionalMethod());
@@ -144,7 +157,8 @@ public class TransactionalDataSourceTest {
     }
 
     @Transactional
-    public List<Connection> nestedTransactionalMethodCreateConnectionAfter() throws SQLException {
+    public List<Connection> nestedTransactionalMethodCreateConnectionAfter()
+      throws SQLException {
       List<Connection> connections = new ArrayList<>();
       connections.addAll(transactionalMethod());
       connections.add(dataSource.getConnection());
@@ -160,6 +174,7 @@ public class TransactionalDataSourceTest {
   }
 
   private static class TestDataSource implements DataSource {
+
     private final String name;
 
     public TestDataSource(String name) {
@@ -172,7 +187,8 @@ public class TransactionalDataSourceTest {
     }
 
     @Override
-    public Connection getConnection(String username, String password) throws SQLException {
+    public Connection getConnection(String username, String password)
+      throws SQLException {
       return new TestConnection(name);
     }
 
@@ -209,12 +225,12 @@ public class TransactionalDataSourceTest {
   }
 
   private static class TestConnection extends FilterConnection {
+
     private final String name;
 
     public TestConnection(String name) {
       this.name = name;
     }
-
 
     @Override
     public void setAutoCommit(boolean a) {}

@@ -5,12 +5,16 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>25.3</version>
+    <version>59.2-SNAPSHOT</version>
   </parent>
 
   <groupId>com.hubspot.guice</groupId>
   <artifactId>guice-transactional</artifactId>
   <version>0.2.4-SNAPSHOT</version>
+
+  <properties>
+    <dep.guice.version>5.1.0</dep.guice.version>
+  </properties>
 
   <dependencyManagement>
     <dependencies>
@@ -60,6 +64,26 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <configuration>
+          <excludeFilterFile>${project.basedir}/spotbugs-exclude-filter.xml</excludeFilterFile>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 
   <scm>
     <connection>scm:git:git@github.com:HubSpot/guice-transactional.git</connection>

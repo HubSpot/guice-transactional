@@ -1,18 +1,18 @@
 package com.hubspot.guice.transactional.impl;
 
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.TransactionRequiredException;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 import javax.transaction.TransactionalException;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
 
 public class TransactionalInterceptor implements MethodInterceptor {
-  private static final ThreadLocal<TransactionalConnection> TRANSACTION_HOLDER = new ThreadLocal<>();
-  private static final ThreadLocal<Boolean> IN_TRANSACTION = new ThreadLocal<Boolean>() {
 
+  private static final ThreadLocal<TransactionalConnection> TRANSACTION_HOLDER =
+    new ThreadLocal<>();
+  private static final ThreadLocal<Boolean> IN_TRANSACTION = new ThreadLocal<Boolean>() {
     @Override
     protected Boolean initialValue() {
       return false;
@@ -52,7 +52,10 @@ public class TransactionalInterceptor implements MethodInterceptor {
           completeTransaction = true;
           break;
         case NEVER:
-          throw new TransactionalException("Transaction is not allowed", new InvalidTransactionException());
+          throw new TransactionalException(
+            "Transaction is not allowed",
+            new InvalidTransactionException()
+          );
       }
     } else {
       switch (transactionType) {
@@ -62,7 +65,10 @@ public class TransactionalInterceptor implements MethodInterceptor {
           completeTransaction = true;
           break;
         case MANDATORY:
-          throw new TransactionalException("Transaction is required", new TransactionRequiredException());
+          throw new TransactionalException(
+            "Transaction is required",
+            new TransactionRequiredException()
+          );
       }
     }
 
