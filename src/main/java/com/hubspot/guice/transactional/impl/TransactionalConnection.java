@@ -1,6 +1,7 @@
 package com.hubspot.guice.transactional.impl;
 
 import com.mchange.v2.sql.filter.FilterConnection;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -8,6 +9,7 @@ public class TransactionalConnection extends FilterConnection {
 
   private final String databaseName;
 
+  @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
   public TransactionalConnection(Connection delegate, String databaseName)
     throws SQLException {
     super(delegate);
