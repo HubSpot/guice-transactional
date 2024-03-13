@@ -3,14 +3,17 @@ package com.hubspot.guice.transactional;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
-
 import javax.transaction.Transactional;
 
 public class TransactionalModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), new TransactionalInterceptor());
+    bindInterceptor(
+      Matchers.any(),
+      Matchers.annotatedWith(Transactional.class),
+      new TransactionalInterceptor()
+    );
   }
 
   @Override
