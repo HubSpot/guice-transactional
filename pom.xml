@@ -12,10 +12,6 @@
   <artifactId>guice-transactional</artifactId>
   <version>0.3.0-SNAPSHOT</version>
 
-  <properties>
-    <dep.guice.version>5.1.0</dep.guice.version>
-  </properties>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
