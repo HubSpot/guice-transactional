@@ -74,6 +74,12 @@ public class TransactionalDataSourceTest {
   }
 
   @Test
+  public void itHandlesBasicJakartaTransaction() throws SQLException {
+    List<Connection> connections = testService.jakartaTransactionalMethod();
+    verifySame(connections);
+  }
+
+  @Test
   public void itHandlesNestedTransactionWithConnectionCreatedBefore()
     throws SQLException {
     List<Connection> connections =
@@ -120,6 +126,11 @@ public class TransactionalDataSourceTest {
     }
 
     public List<Connection> nonTransactionalMethod() throws SQLException {
+      return Arrays.asList(dataSource.getConnection(), dataSource.getConnection());
+    }
+
+    @jakarta.transaction.Transactional
+    public List<Connection> jakartaTransactionalMethod() throws SQLException {
       return Arrays.asList(dataSource.getConnection(), dataSource.getConnection());
     }
 
