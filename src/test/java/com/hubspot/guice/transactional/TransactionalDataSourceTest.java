@@ -10,7 +10,6 @@ import com.google.inject.Module;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.mchange.v2.sql.filter.FilterConnection;
-import jakarta.transaction.Transactional;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
+import javax.transaction.Transactional;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -74,6 +74,12 @@ public class TransactionalDataSourceTest {
   }
 
   @Test
+  public void itHandlesBasicJakartaTransaction() throws SQLException {
+    List<Connection> connections = testService.jakartaTransactionalMethod();
+    verifySame(connections);
+  }
+
+  @Test
   public void itHandlesNestedTransactionWithConnectionCreatedBefore()
     throws SQLException {
     List<Connection> connections =
@@ -120,6 +126,11 @@ public class TransactionalDataSourceTest {
     }
 
     public List<Connection> nonTransactionalMethod() throws SQLException {
+      return Arrays.asList(dataSource.getConnection(), dataSource.getConnection());
+    }
+
+    @jakarta.transaction.Transactional
+    public List<Connection> jakartaTransactionalMethod() throws SQLException {
       return Arrays.asList(dataSource.getConnection(), dataSource.getConnection());
     }
 

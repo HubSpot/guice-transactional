@@ -1,40 +1,26 @@
 package com.hubspot.guice.transactional.impl;
 
-import jakarta.transaction.InvalidTransactionException;
-import jakarta.transaction.TransactionRequiredException;
-import jakarta.transaction.Transactional;
-import jakarta.transaction.Transactional.TxType;
-import jakarta.transaction.TransactionalException;
+import static com.hubspot.guice.transactional.impl.TransactionHolder.IN_TRANSACTION;
+import static com.hubspot.guice.transactional.impl.TransactionHolder.TRANSACTION_HOLDER;
+
+import com.hubspot.guice.transactional.impl.TransactionalAdapter.TxType;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
-public class TransactionalInterceptor implements MethodInterceptor {
+public abstract class AbstractTransactionalInterceptor implements MethodInterceptor {
 
-  private static final ThreadLocal<TransactionalConnection> TRANSACTION_HOLDER =
-    new ThreadLocal<>();
-  private static final ThreadLocal<Boolean> IN_TRANSACTION = new ThreadLocal<Boolean>() {
-    @Override
-    protected Boolean initialValue() {
-      return false;
-    }
-  };
+  protected abstract TransactionalAdapter getMethodTransactional(
+    MethodInvocation invocation
+  );
 
-  public static boolean inTransaction() {
-    return IN_TRANSACTION.get();
-  }
+  protected abstract Throwable invalidTransactionException(String message);
 
-  public static TransactionalConnection getTransaction() {
-    return TRANSACTION_HOLDER.get();
-  }
-
-  public static void setTransaction(TransactionalConnection transaction) {
-    TRANSACTION_HOLDER.set(transaction);
-  }
+  protected abstract Throwable transactionRequiredException(String message);
 
   @Override
   public Object invoke(MethodInvocation invocation) throws Throwable {
-    Transactional annotation = invocation.getMethod().getAnnotation(Transactional.class);
-    TxType transactionType = annotation.value();
+    TransactionalAdapter annotation = getMethodTransactional(invocation);
+    TxType transactionType = annotation.getTxType();
 
     boolean oldInTransaction = IN_TRANSACTION.get();
     TransactionalConnection oldTransaction = TRANSACTION_HOLDER.get();
@@ -43,19 +29,16 @@ public class TransactionalInterceptor implements MethodInterceptor {
     if (IN_TRANSACTION.get()) {
       switch (transactionType) {
         case REQUIRES_NEW:
-          TRANSACTION_HOLDER.set(null);
+          TRANSACTION_HOLDER.remove();
           completeTransaction = true;
           break;
         case NOT_SUPPORTED:
           IN_TRANSACTION.set(false);
-          TRANSACTION_HOLDER.set(null);
+          TRANSACTION_HOLDER.remove();
           completeTransaction = true;
           break;
         case NEVER:
-          throw new TransactionalException(
-            "Transaction is not allowed",
-            new InvalidTransactionException()
-          );
+          throw invalidTransactionException("Transaction is not allowed");
       }
     } else {
       switch (transactionType) {
@@ -65,10 +48,7 @@ public class TransactionalInterceptor implements MethodInterceptor {
           completeTransaction = true;
           break;
         case MANDATORY:
-          throw new TransactionalException(
-            "Transaction is required",
-            new TransactionRequiredException()
-          );
+          throw transactionRequiredException("Transaction is required");
       }
     }
 
@@ -106,9 +86,8 @@ public class TransactionalInterceptor implements MethodInterceptor {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private boolean shouldRollback(Transactional annotation, Throwable t) {
-    for (Class dontRollback : annotation.dontRollbackOn()) {
+  private boolean shouldRollback(TransactionalAdapter annotation, Throwable t) {
+    for (Class<?> dontRollback : annotation.getDontRollbackOn()) {
       if (dontRollback.isAssignableFrom(t.getClass())) {
         return false;
       }
