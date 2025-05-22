@@ -1,10 +1,10 @@
 package com.hubspot.guice.transactional.impl;
 
-import javax.transaction.InvalidTransactionException;
-import javax.transaction.TransactionRequiredException;
-import javax.transaction.Transactional;
-import javax.transaction.Transactional.TxType;
-import javax.transaction.TransactionalException;
+import jakarta.transaction.InvalidTransactionException;
+import jakarta.transaction.TransactionRequiredException;
+import jakarta.transaction.Transactional;
+import jakarta.transaction.Transactional.TxType;
+import jakarta.transaction.TransactionalException;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 

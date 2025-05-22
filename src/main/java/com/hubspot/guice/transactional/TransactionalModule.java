@@ -3,7 +3,7 @@ package com.hubspot.guice.transactional;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 
 public class TransactionalModule extends AbstractModule {
 
