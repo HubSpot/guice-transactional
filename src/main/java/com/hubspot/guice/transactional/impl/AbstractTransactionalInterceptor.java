@@ -1,7 +1,7 @@
 package com.hubspot.guice.transactional.impl;
 
-import static com.hubspot.guice.transactional.impl.TransactionHolder.IN_TRANSACTION;
-import static com.hubspot.guice.transactional.impl.TransactionHolder.TRANSACTION_HOLDER;
+import static com.hubspot.guice.transactional.impl.TransactionalInterceptor.IN_TRANSACTION;
+import static com.hubspot.guice.transactional.impl.TransactionalInterceptor.TRANSACTION_HOLDER;
 
 import com.hubspot.guice.transactional.impl.TransactionalAdapter.TxType;
 import org.aopalliance.intercept.MethodInterceptor;

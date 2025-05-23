@@ -1,7 +1,7 @@
 package com.hubspot.guice.transactional;
 
-import com.hubspot.guice.transactional.impl.TransactionHolder;
 import com.hubspot.guice.transactional.impl.TransactionalConnection;
+import com.hubspot.guice.transactional.impl.TransactionalInterceptor;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -21,13 +21,13 @@ public class TransactionalDataSource implements DataSource {
 
   @Override
   public Connection getConnection() throws SQLException {
-    if (TransactionHolder.inTransaction()) {
-      TransactionalConnection connection = TransactionHolder.getTransaction();
+    if (TransactionalInterceptor.inTransaction()) {
+      TransactionalConnection connection = TransactionalInterceptor.getTransaction();
       if (connection == null) {
         Connection delegateConnection = delegate.getConnection();
         ensureDbNamePopulated(delegateConnection);
         connection = new TransactionalConnection(delegateConnection, getDbName());
-        TransactionHolder.setTransaction(connection);
+        TransactionalInterceptor.setTransaction(connection);
       }
       throwIfConnectionInvalid(connection);
 
@@ -41,13 +41,13 @@ public class TransactionalDataSource implements DataSource {
 
   @Override
   public Connection getConnection(String username, String password) throws SQLException {
-    if (TransactionHolder.inTransaction()) {
-      TransactionalConnection connection = TransactionHolder.getTransaction();
+    if (TransactionalInterceptor.inTransaction()) {
+      TransactionalConnection connection = TransactionalInterceptor.getTransaction();
       if (connection == null) {
         Connection delegateConnection = delegate.getConnection(username, password);
         ensureDbNamePopulated(delegateConnection);
         connection = new TransactionalConnection(delegateConnection, getDbName());
-        TransactionHolder.setTransaction(connection);
+        TransactionalInterceptor.setTransaction(connection);
       }
       throwIfConnectionInvalid(connection);
 

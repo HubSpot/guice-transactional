@@ -1,6 +1,6 @@
 package com.hubspot.guice.transactional.impl;
 
-public class TransactionHolder {
+public class TransactionalInterceptor {
 
   protected static final ThreadLocal<TransactionalConnection> TRANSACTION_HOLDER =
     new ThreadLocal<>();
