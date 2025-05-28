@@ -10,7 +10,7 @@
 
   <groupId>com.hubspot.guice</groupId>
   <artifactId>guice-transactional</artifactId>
-  <version>0.4.2-SNAPSHOT</version>
+  <version>0.4.3-SNAPSHOT</version>
 
   <name>${project.groupId}:${project.artifactId}</name>
   <description>Provides transactional DataSource interception for Guice without JPA</description>
