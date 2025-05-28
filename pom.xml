@@ -5,12 +5,15 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>62.1</version>
+    <version>63.0</version>
   </parent>
 
   <groupId>com.hubspot.guice</groupId>
   <artifactId>guice-transactional</artifactId>
   <version>0.4.2-SNAPSHOT</version>
+
+  <name>${project.groupId}:${project.artifactId}</name>
+  <description>Provides transactional DataSource interception for Guice without JPA</description>
 
   <dependencyManagement>
     <dependencies>
@@ -75,6 +78,22 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <url>https://github.com/HubSpot/guice-transactional</url>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Jared Stehler</name>
+      <email>jstehler@hubspot.com</email>
+    </developer>
+  </developers>
 
   <scm>
     <connection>scm:git:git@github.com:HubSpot/guice-transactional.git</connection>
