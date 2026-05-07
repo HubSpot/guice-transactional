@@ -1,13 +1,31 @@
 package com.hubspot.guice.transactional.impl;
 
+import com.hubspot.guice.transactional.TransactionalPreInterceptor;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import org.aopalliance.intercept.MethodInterceptor;
 
 public class TransactionalInterceptorFactory {
+
+  private static final List<TransactionalPreInterceptor> PRE_INTERCEPTORS;
+
+  static {
+    List<TransactionalPreInterceptor> list = new ArrayList<>();
+    ServiceLoader.load(TransactionalPreInterceptor.class).forEach(list::add);
+    list.sort(Comparator.comparingInt(TransactionalPreInterceptor::priority));
+    PRE_INTERCEPTORS = List.copyOf(list);
+  }
+
+  public static List<TransactionalPreInterceptor> preInterceptors() {
+    return PRE_INTERCEPTORS;
+  }
 
   @SuppressWarnings("unchecked")
   public static Map<Class<? extends Annotation>, MethodInterceptor> instantiateInterceptors() {
