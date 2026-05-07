@@ -12,16 +12,13 @@ public class TransactionalModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Map<Class<? extends Annotation>, MethodInterceptor> interceptors =
-      TransactionalInterceptorFactory.instantiateInterceptors();
-
-    for (TransactionalPreInterceptor pre : TransactionalInterceptorFactory.preInterceptors()) {
-      for (Class<? extends Annotation> annotation : interceptors.keySet()) {
-        bindInterceptor(Matchers.any(), Matchers.annotatedWith(annotation), pre);
-      }
+    for (PreTransactionalModule pre : TransactionalInterceptorFactory.preModules()) {
+      install(pre);
     }
 
-    for (Entry<Class<? extends Annotation>, MethodInterceptor> entry : interceptors.entrySet()) {
+    for (Entry<Class<? extends Annotation>, MethodInterceptor> entry : TransactionalInterceptorFactory
+      .instantiateInterceptors()
+      .entrySet()) {
       bindInterceptor(
         Matchers.any(),
         Matchers.annotatedWith(entry.getKey()),

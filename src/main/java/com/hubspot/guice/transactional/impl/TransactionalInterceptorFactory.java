@@ -1,30 +1,47 @@
 package com.hubspot.guice.transactional.impl;
 
-import com.hubspot.guice.transactional.TransactionalPreInterceptor;
+import com.hubspot.guice.transactional.PreTransactionalModule;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
+import java.util.Set;
 import org.aopalliance.intercept.MethodInterceptor;
 
 public class TransactionalInterceptorFactory {
 
-  private static final List<TransactionalPreInterceptor> PRE_INTERCEPTORS;
+  private static final List<PreTransactionalModule> PRE_MODULES;
 
   static {
-    List<TransactionalPreInterceptor> list = new ArrayList<>();
-    ServiceLoader.load(TransactionalPreInterceptor.class).forEach(list::add);
-    list.sort(Comparator.comparingInt(TransactionalPreInterceptor::priority));
-    PRE_INTERCEPTORS = List.copyOf(list);
+    List<PreTransactionalModule> list = new ArrayList<>();
+    try {
+      ServiceLoader.load(PreTransactionalModule.class).forEach(list::add);
+      list.sort(Comparator.comparingInt(PreTransactionalModule::priority));
+    } catch (ServiceConfigurationError e) {
+      list.clear();
+    }
+    PRE_MODULES = List.copyOf(list);
   }
 
-  public static List<TransactionalPreInterceptor> preInterceptors() {
-    return PRE_INTERCEPTORS;
+  public static List<PreTransactionalModule> preModules() {
+    return PRE_MODULES;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Set<Class<? extends Annotation>> transactionalAnnotations() {
+    Set<Class<? extends Annotation>> annotations = new LinkedHashSet<>();
+    loadClass("javax.transaction.Transactional")
+      .ifPresent(c -> annotations.add((Class<? extends Annotation>) c));
+    loadClass("jakarta.transaction.Transactional")
+      .ifPresent(c -> annotations.add((Class<? extends Annotation>) c));
+    return annotations;
   }
 
   @SuppressWarnings("unchecked")
