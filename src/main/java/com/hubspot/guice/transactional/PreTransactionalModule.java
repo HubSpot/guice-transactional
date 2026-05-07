@@ -8,11 +8,7 @@ import com.google.inject.Module;
  * Guice AOP chain.
  *
  * Discovered via {@link java.util.ServiceLoader}.
- * Implementations must have a public no-arg constructor and should typically
+ * Implementations must have a public no-arg constructor and would typically
  * extend {@link com.google.inject.AbstractModule}.
  */
-public interface PreTransactionalModule extends Module {
-  default int priority() {
-    return 0;
-  }
-}
+public interface PreTransactionalModule extends Module {}

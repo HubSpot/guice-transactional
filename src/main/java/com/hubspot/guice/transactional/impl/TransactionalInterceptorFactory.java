@@ -4,7 +4,6 @@ import com.hubspot.guice.transactional.PreTransactionalModule;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -17,21 +16,20 @@ import org.aopalliance.intercept.MethodInterceptor;
 
 public class TransactionalInterceptorFactory {
 
-  private static final List<PreTransactionalModule> PRE_MODULES;
+  private static final List<PreTransactionalModule> PRE_TRANSACTIONAL_MODULES;
 
   static {
     List<PreTransactionalModule> list = new ArrayList<>();
     try {
       ServiceLoader.load(PreTransactionalModule.class).forEach(list::add);
-      list.sort(Comparator.comparingInt(PreTransactionalModule::priority));
     } catch (ServiceConfigurationError e) {
       list.clear();
     }
-    PRE_MODULES = List.copyOf(list);
+    PRE_TRANSACTIONAL_MODULES = List.copyOf(list);
   }
 
-  public static List<PreTransactionalModule> preModules() {
-    return PRE_MODULES;
+  public static List<PreTransactionalModule> preTransactionalModules() {
+    return PRE_TRANSACTIONAL_MODULES;
   }
 
   @SuppressWarnings("unchecked")

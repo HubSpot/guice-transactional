@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matchers;
 import com.hubspot.guice.transactional.impl.TransactionalInterceptorFactory;
 import java.lang.annotation.Annotation;
-import java.util.Map;
 import java.util.Map.Entry;
 import org.aopalliance.intercept.MethodInterceptor;
 
@@ -12,8 +11,8 @@ public class TransactionalModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    for (PreTransactionalModule pre : TransactionalInterceptorFactory.preModules()) {
-      install(pre);
+    for (PreTransactionalModule module : TransactionalInterceptorFactory.preTransactionalModules()) {
+      install(module);
     }
 
     for (Entry<Class<? extends Annotation>, MethodInterceptor> entry : TransactionalInterceptorFactory
