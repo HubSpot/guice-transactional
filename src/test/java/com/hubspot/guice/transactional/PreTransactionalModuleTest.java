@@ -90,68 +90,67 @@ public class PreTransactionalModuleTest {
       doWork();
     }
   }
-
-//  static class StubDataSource implements DataSource {
-//
-//    @Override
-//    public Connection getConnection() throws SQLException {
-//      return new StubConnection();
-//    }
-//
-//    @Override
-//    public Connection getConnection(String u, String p) throws SQLException {
-//      return new StubConnection();
-//    }
-//
-//    @Override
-//    public <T> T unwrap(Class<T> iface) throws SQLException {
-//      throw new SQLFeatureNotSupportedException();
-//    }
-//
-//    @Override
-//    public boolean isWrapperFor(Class<?> iface) {
-//      return false;
-//    }
-//
-//    @Override
-//    public PrintWriter getLogWriter() {
-//      return null;
-//    }
-//
-//    @Override
-//    public void setLogWriter(PrintWriter out) {}
-//
-//    @Override
-//    public void setLoginTimeout(int seconds) {}
-//
-//    @Override
-//    public int getLoginTimeout() {
-//      return 0;
-//    }
-//
-//    @Override
-//    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-//      throw new SQLFeatureNotSupportedException();
-//    }
-//  }
-//
-//  static class StubConnection extends FilterConnection {
-//
-//    @Override
-//    public void setAutoCommit(boolean a) {}
-//
-//    @Override
-//    public void commit() {}
-//
-//    @Override
-//    public void rollback() {}
-//
-//    @Override
-//    public void close() {}
-//
-//    @Override
-//    public String getCatalog() {
-//      return "test";
-//    }
-//  }
+  //  static class StubDataSource implements DataSource {
+  //
+  //    @Override
+  //    public Connection getConnection() throws SQLException {
+  //      return new StubConnection();
+  //    }
+  //
+  //    @Override
+  //    public Connection getConnection(String u, String p) throws SQLException {
+  //      return new StubConnection();
+  //    }
+  //
+  //    @Override
+  //    public <T> T unwrap(Class<T> iface) throws SQLException {
+  //      throw new SQLFeatureNotSupportedException();
+  //    }
+  //
+  //    @Override
+  //    public boolean isWrapperFor(Class<?> iface) {
+  //      return false;
+  //    }
+  //
+  //    @Override
+  //    public PrintWriter getLogWriter() {
+  //      return null;
+  //    }
+  //
+  //    @Override
+  //    public void setLogWriter(PrintWriter out) {}
+  //
+  //    @Override
+  //    public void setLoginTimeout(int seconds) {}
+  //
+  //    @Override
+  //    public int getLoginTimeout() {
+  //      return 0;
+  //    }
+  //
+  //    @Override
+  //    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+  //      throw new SQLFeatureNotSupportedException();
+  //    }
+  //  }
+  //
+  //  static class StubConnection extends FilterConnection {
+  //
+  //    @Override
+  //    public void setAutoCommit(boolean a) {}
+  //
+  //    @Override
+  //    public void commit() {}
+  //
+  //    @Override
+  //    public void rollback() {}
+  //
+  //    @Override
+  //    public void close() {}
+  //
+  //    @Override
+  //    public String getCatalog() {
+  //      return "test";
+  //    }
+  //  }
 }

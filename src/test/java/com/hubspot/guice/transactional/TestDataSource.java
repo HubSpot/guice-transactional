@@ -9,52 +9,50 @@ import javax.sql.DataSource;
 
 public class TestDataSource implements DataSource {
 
-    private final String name;
+  private final String name;
 
-    public TestDataSource(String name) {
-      this.name = name;
-    }
+  public TestDataSource(String name) {
+    this.name = name;
+  }
 
-    @Override
-    public Connection getConnection() throws SQLException {
-      return new TestConnection(name);
-    }
+  @Override
+  public Connection getConnection() throws SQLException {
+    return new TestConnection(name);
+  }
 
-    @Override
-    public Connection getConnection(String username, String password)
-        throws SQLException {
-      return new TestConnection(name);
-    }
+  @Override
+  public Connection getConnection(String username, String password) throws SQLException {
+    return new TestConnection(name);
+  }
 
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-      throw new SQLFeatureNotSupportedException();
-    }
+  @Override
+  public <T> T unwrap(Class<T> iface) throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
 
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-      return false;
-    }
+  @Override
+  public boolean isWrapperFor(Class<?> iface) throws SQLException {
+    return false;
+  }
 
-    @Override
-    public PrintWriter getLogWriter() throws SQLException {
-      throw new SQLFeatureNotSupportedException();
-    }
+  @Override
+  public PrintWriter getLogWriter() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
 
-    @Override
-    public void setLogWriter(PrintWriter out) throws SQLException {}
+  @Override
+  public void setLogWriter(PrintWriter out) throws SQLException {}
 
-    @Override
-    public void setLoginTimeout(int seconds) throws SQLException {}
+  @Override
+  public void setLoginTimeout(int seconds) throws SQLException {}
 
-    @Override
-    public int getLoginTimeout() throws SQLException {
-      throw new SQLFeatureNotSupportedException();
-    }
+  @Override
+  public int getLoginTimeout() throws SQLException {
+    throw new SQLFeatureNotSupportedException();
+  }
 
-    @Override
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-      throw new SQLFeatureNotSupportedException();
-    }
-
+  @Override
+  public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+    throw new SQLFeatureNotSupportedException();
+  }
 }

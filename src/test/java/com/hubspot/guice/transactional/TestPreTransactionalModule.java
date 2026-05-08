@@ -8,7 +8,9 @@ import java.util.Collections;
 import java.util.List;
 import javax.transaction.Transactional;
 
-public class TestPreTransactionalModule extends AbstractModule implements PreTransactionalModule {
+public class TestPreTransactionalModule
+  extends AbstractModule
+  implements PreTransactionalModule {
 
   static final List<String> EVENTS = Collections.synchronizedList(new ArrayList<>());
 
@@ -26,7 +28,5 @@ public class TestPreTransactionalModule extends AbstractModule implements PreTra
         }
       }
     );
-
-    }
-
   }
+}
