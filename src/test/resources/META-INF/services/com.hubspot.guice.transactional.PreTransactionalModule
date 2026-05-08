@@ -1,1 +1,1 @@
-com.hubspot.guice.transactional.TestPreModule
+com.hubspot.guice.transactional.TestPreTransactionalModule

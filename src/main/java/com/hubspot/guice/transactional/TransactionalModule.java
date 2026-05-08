@@ -11,7 +11,7 @@ public class TransactionalModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    for (PreTransactionalModule module : TransactionalInterceptorFactory.preTransactionalModules()) {
+    for (PreTransactionalModule module : TransactionalInterceptorFactory.getPreTransactionalModules()) {
       install(module);
     }
 

@@ -3,7 +3,7 @@ package com.hubspot.guice.transactional;
 import com.google.inject.Module;
 
 /**
- * SPI for modules that should be installed ahead of the @Transactional interceptor
+ * SPI for modules that must be installed ahead of the @Transactional interceptor
  * bindings. Any interceptors bound by these modules will be outermost in the
  * Guice AOP chain.
  *

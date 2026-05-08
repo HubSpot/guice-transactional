@@ -5,13 +5,11 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
-import java.util.Set;
 import org.aopalliance.intercept.MethodInterceptor;
 
 public class TransactionalInterceptorFactory {
@@ -26,20 +24,6 @@ public class TransactionalInterceptorFactory {
       list.clear();
     }
     PRE_TRANSACTIONAL_MODULES = List.copyOf(list);
-  }
-
-  public static List<PreTransactionalModule> preTransactionalModules() {
-    return PRE_TRANSACTIONAL_MODULES;
-  }
-
-  @SuppressWarnings("unchecked")
-  public static Set<Class<? extends Annotation>> transactionalAnnotations() {
-    Set<Class<? extends Annotation>> annotations = new LinkedHashSet<>();
-    loadClass("javax.transaction.Transactional")
-      .ifPresent(c -> annotations.add((Class<? extends Annotation>) c));
-    loadClass("jakarta.transaction.Transactional")
-      .ifPresent(c -> annotations.add((Class<? extends Annotation>) c));
-    return annotations;
   }
 
   @SuppressWarnings("unchecked")
@@ -67,6 +51,10 @@ public class TransactionalInterceptorFactory {
       );
 
     return interceptors;
+  }
+
+  public static List<PreTransactionalModule> getPreTransactionalModules() {
+    return PRE_TRANSACTIONAL_MODULES;
   }
 
   private static Optional<Class<?>> loadClass(String fqdn) {
