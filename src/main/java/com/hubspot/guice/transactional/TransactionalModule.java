@@ -11,6 +11,10 @@ public class TransactionalModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    for (PreTransactionalModule module : TransactionalInterceptorFactory.getPreTransactionalModules()) {
+      install(module);
+    }
+
     for (Entry<Class<? extends Annotation>, MethodInterceptor> entry : TransactionalInterceptorFactory
       .instantiateInterceptors()
       .entrySet()) {

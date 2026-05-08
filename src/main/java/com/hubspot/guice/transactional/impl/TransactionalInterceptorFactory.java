@@ -1,13 +1,30 @@
 package com.hubspot.guice.transactional.impl;
 
+import com.hubspot.guice.transactional.PreTransactionalModule;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
 import org.aopalliance.intercept.MethodInterceptor;
 
 public class TransactionalInterceptorFactory {
+
+  private static final List<PreTransactionalModule> PRE_TRANSACTIONAL_MODULES;
+
+  static {
+    List<PreTransactionalModule> list = new ArrayList<>();
+    try {
+      ServiceLoader.load(PreTransactionalModule.class).forEach(list::add);
+    } catch (ServiceConfigurationError e) {
+      list.clear();
+    }
+    PRE_TRANSACTIONAL_MODULES = List.copyOf(list);
+  }
 
   @SuppressWarnings("unchecked")
   public static Map<Class<? extends Annotation>, MethodInterceptor> instantiateInterceptors() {
@@ -34,6 +51,10 @@ public class TransactionalInterceptorFactory {
       );
 
     return interceptors;
+  }
+
+  public static List<PreTransactionalModule> getPreTransactionalModules() {
+    return PRE_TRANSACTIONAL_MODULES;
   }
 
   private static Optional<Class<?>> loadClass(String fqdn) {
